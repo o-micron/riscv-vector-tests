@@ -85,9 +85,18 @@ else
 VARCH = zvl${VLEN}b_zve64d_zfh_zfhmin_zvfh
 endif
 
-RISCV_PREFIX = riscv64-unknown-elf-
-RISCV_GCC = $(RISCV_PREFIX)gcc
+RISCV_PREFIX ?= $(shell \
+	if command -v riscv64-unknown-elf-gcc >/dev/null 2>&1; then \
+		printf '%s' riscv64-unknown-elf-; \
+	elif command -v riscv32-unknown-elf-gcc >/dev/null 2>&1; then \
+		printf '%s' riscv32-unknown-elf-; \
+	fi)
+RISCV_GCC ?= $(RISCV_PREFIX)gcc
 RISCV_GCC_OPTS = -static -mcmodel=medany -fvisibility=hidden -nostdlib -nostartfiles -DENTROPY=0xdeadbeef -DLFSR_BITS=9 -fno-tree-loop-distribute-patterns
+
+ifeq ($(strip $(RISCV_PREFIX)),)
+$(error "No RISC-V GCC toolchain found in PATH. Expected riscv64-unknown-elf-gcc or riscv32-unknown-elf-gcc")
+endif
 
 ifeq ($(TEST_MODE), self)
 STAGE2_GCC_OPTS =
@@ -139,7 +148,12 @@ include Makefrag
 
 compile-stage1: generate-stage1
 	@mkdir -p ${OUTPUT_STAGE1_BIN}
-	$(MAKE) $(tests)
+	@set -e; \
+	for src in ${OUTPUT_STAGE1}*.S; do \
+		test -e "$$src" || continue; \
+		out=${OUTPUT_STAGE1_BIN}$$(basename "$$src" .S); \
+		$(RISCV_GCC) -march=${MARCH} -mabi=${MABI} $(RISCV_GCC_OPTS) -I$(ENV) -Imacros/general -T$(ENV)/link.ld $(ENV_CSRCS) "$$src" -o "$$out"; \
+	done
 
 $(tests): %: ${OUTPUT_STAGE1}%.S
 	$(RISCV_GCC) -march=${MARCH} -mabi=${MABI} $(RISCV_GCC_OPTS) -I$(ENV) -Imacros/general -T$(ENV)/link.ld $(ENV_CSRCS) $< -o ${OUTPUT_STAGE1_BIN}$@
@@ -148,7 +162,12 @@ tests_patch = $(addsuffix .patch, $(tests))
 
 patching-stage2: build-patcher-spike compile-stage1
 	@mkdir -p ${OUTPUT_STAGE2_PATCH}
-	$(MAKE) $(tests_patch)
+	@set -e; \
+	for bin in ${OUTPUT_STAGE1_BIN}*; do \
+		test -f "$$bin" || continue; \
+		out=${OUTPUT_STAGE2_PATCH}$$(basename "$$bin").patch; \
+		LD_LIBRARY_PATH=$(SPIKE_INSTALL)/lib ${PATCHER_SPIKE} --isa=${MARCH}_${VARCH} $(PK) "$$bin" > "$$out"; \
+	done
 
 $(tests_patch):
 	LD_LIBRARY_PATH=$(SPIKE_INSTALL)/lib ${PATCHER_SPIKE} --isa=${MARCH}_${VARCH} $(PK) ${OUTPUT_STAGE1_BIN}$(shell basename $@ .patch) > ${OUTPUT_STAGE2_PATCH}$@
@@ -158,7 +177,13 @@ generate-stage2: patching-stage2
 
 compile-stage2: generate-stage2
 	@mkdir -p ${OUTPUT_STAGE2_BIN}
-	$(MAKE) $(tests_stage2)
+	@set -e; \
+	for src in ${OUTPUT_STAGE2}*.S; do \
+		test -e "$$src" || continue; \
+		out=${OUTPUT_STAGE2_BIN}$$(basename "$$src" .S); \
+		$(RISCV_GCC) -march=${MARCH} -mabi=${MABI} $(RISCV_GCC_OPTS) $(STAGE2_GCC_OPTS) -I$(ENV) -Imacros/general -T$(ENV)/link.ld $(ENV_CSRCS) "$$src" -o "$$out"; \
+		${SPIKE} --isa=${MARCH}_${VARCH} $(PK) "$$out"; \
+	done
 
 tests_stage2 = $(addsuffix .stage2, $(tests))
 

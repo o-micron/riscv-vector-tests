@@ -44,7 +44,7 @@ The Spike simulator is known as the RISC-V gold standard simulator, and although
 This repository uses the `riscv-test-env` repository as a submodule.
 
 ```
-git clone --recurse-submodules https://github.com/chipsalliance/riscv-vector-tests
+git clone --recurse-submodules https://github.com/o-micron/riscv-vector-tests.git
 ```
 
 ## How to use
