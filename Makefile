@@ -76,6 +76,7 @@ CONFIGS = configs/
 
 SPIKE = spike
 PATCHER_SPIKE = build/pspike
+SPIKE_MEM_LAYOUT = -m0x04000000:0x00200000,0x80000000:0x00200000
 MABI = lp64d
 
 ifeq ($(XLEN), 32)
@@ -182,14 +183,14 @@ compile-stage2: generate-stage2
 		test -e "$$src" || continue; \
 		out=${OUTPUT_STAGE2_BIN}$$(basename "$$src" .S); \
 		$(RISCV_GCC) -march=${MARCH} -mabi=${MABI} $(RISCV_GCC_OPTS) $(STAGE2_GCC_OPTS) -I$(ENV) -Imacros/general -T$(ENV)/link.ld $(ENV_CSRCS) "$$src" -o "$$out"; \
-		${SPIKE} --isa=${MARCH}_${VARCH} $(PK) "$$out"; \
+		${SPIKE} ${SPIKE_MEM_LAYOUT} --isa=${MARCH}_${VARCH} $(PK) "$$out"; \
 	done
 
 tests_stage2 = $(addsuffix .stage2, $(tests))
 
 $(tests_stage2):
 	$(RISCV_GCC) -march=${MARCH} -mabi=${MABI} $(RISCV_GCC_OPTS) $(STAGE2_GCC_OPTS) -I$(ENV) -Imacros/general -T$(ENV)/link.ld $(ENV_CSRCS) ${OUTPUT_STAGE2}$(shell basename $@ .stage2).S -o ${OUTPUT_STAGE2_BIN}$(shell basename $@ .stage2)
-	${SPIKE} --isa=${MARCH}_${VARCH} $(PK) ${OUTPUT_STAGE2_BIN}$(shell basename $@ .stage2)
+	${SPIKE} ${SPIKE_MEM_LAYOUT} --isa=${MARCH}_${VARCH} $(PK) ${OUTPUT_STAGE2_BIN}$(shell basename $@ .stage2)
 
 clean-out:
 	rm -rf $(OUTPUT)

@@ -57,7 +57,10 @@ class magic_extension_t : public extension_t {
 };
 
 int main(int argc, char** argv) {
-  std::vector<mem_cfg_t> mem_layout{mem_cfg_t(0x80000000, 0x10000000)};
+  std::vector<mem_cfg_t> mem_layout{
+    mem_cfg_t(0x04000000, 0x00200000),
+    mem_cfg_t(0x80000000, 0x00200000),
+  };
   std::vector<size_t> hartids = {0};
   cfg_t cfg;
   option_parser_t parser;
