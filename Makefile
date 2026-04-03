@@ -4,7 +4,7 @@
 ##
 ##Usage: make all -j$(nproc) --environment-overrides [OPTIONS]
 ##
-##Example: to generate isa=rv32gcv_zvl128b_zve32f mode=machine tests, use:
+##Example: to generate isa=rv32gv_zvl128b_zve32f mode=machine tests, use:
 ## make all --environment-overrides VLEN=128 XLEN=32 MODE=machine -j$(nproc)
 ##
 ##Subcommands:
@@ -59,7 +59,7 @@ else
 EXT_V = v
 endif
 
-  MARCH = rv${XLEN}gc${EXT_V}_zvbb_zvbc_zfh_zvfh_zvkg_zvkned_zvknha_zvksed_zvksh_zfbfmin_zvfbfmin_zvfbfwma
+  MARCH = rv${XLEN}g${EXT_V}_zvbb_zvbc_zfh_zvfh_zvkg_zvkned_zvknha_zvksed_zvksh_zfbfmin_zvfbfmin_zvfbfwma
         ##Set the ISA string to define the base architecture and enabled extensions.
         ##If your compiler doesn't support vector crypto extensions, you can use MARCH = rv${XLEN}g{EXT_V}_zfh_zvfh
         ##If your compiler doesn't support half floating, you can use MARCH = rv${XLEN}g${EXT_V}
