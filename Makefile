@@ -59,7 +59,7 @@ else
 EXT_V = v
 endif
 
-  MARCH = rv${XLEN}g${EXT_V}_zvbb_zvbc_zfh_zvfh_zvkg_zvkned_zvknha_zvksed_zvksh_zfbfmin_zvfbfmin_zvfbfwma
+  MARCH = rv${XLEN}g${EXT_V}
         ##Set the ISA string to define the base architecture and enabled extensions.
         ##If your compiler doesn't support vector crypto extensions, you can use MARCH = rv${XLEN}g{EXT_V}_zfh_zvfh
         ##If your compiler doesn't support half floating, you can use MARCH = rv${XLEN}g${EXT_V}
@@ -81,9 +81,9 @@ MABI = lp64d
 
 ifeq ($(XLEN), 32)
 MABI = ilp32f
-VARCH = zvl${VLEN}b_zve32f_zfh_zfhmin_zvfh
+VARCH = zvl${VLEN}b_zve32f
 else
-VARCH = zvl${VLEN}b_zve64d_zfh_zfhmin_zvfh
+VARCH = zvl${VLEN}b_zve64d
 endif
 
 RISCV_PREFIX ?= $(shell \
